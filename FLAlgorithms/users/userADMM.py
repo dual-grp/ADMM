@@ -37,13 +37,15 @@ class UserADMM():
             residual = torch.matmul((torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)), self.train_data)
             regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ + 1/self.ro * self.localLamda) ** 2
             self.loss = torch.norm(residual, p="fro") ** 2
+            print("self.loss", self.loss.data)
             self.lossADMM = self.loss + regularization
+            print("self.lossADMM", self.lossADMM)
             temp = self.localPCA.data.clone()
             # slove local problem locally
             if self.localPCA.grad is not None:
                 self.localPCA.grad.data.zero_()
 
-            self.lossADMM.backward()
+            self.lossADMM.backward(retain_graph=True)
             #grad = torch.autograd.grad(self.lossADMM, self.localPCA)
             localGrad = self.localPCA.grad.data.clone()# grad[0]
             # update local pca
