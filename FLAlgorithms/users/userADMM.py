@@ -6,7 +6,7 @@ import copy
 # Implementation for FedAvg clients
 
 class UserADMM():
-    def __init__(self, device, numeric_id, train_data, test_data, commonPCA, learning_rate, ro, local_epochs, dim):
+    def __init__(self, device, id, train_data, test_data, commonPCA, learning_rate, ro, local_epochs, dim):
         self.localPCA = copy.deepcopy(commonPCA)
         self.ro = ro
         self.localZ = copy.deepcopy(commonPCA)
@@ -23,7 +23,7 @@ class UserADMM():
         self.localPCA.requires_grad_(True)
 
     def set_commonPCA(self, commonPCA):
-        self.localZ = commonPCA
+        self.localZ = commonPCA.data.clone()
         self.localLamda = self.localLamda + self.ro * (self.localPCA - self.localZ)
 
     def train_error_and_loss(self):
@@ -32,22 +32,23 @@ class UserADMM():
         return loss_train , self.train_samples
 
     def train(self, epochs):
+        print("Client--------------",self.id)
         for i in range(self.local_epochs):
             self.localPCA.requires_grad_(True)
-            #residual = torch.matmul((torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)), self.train_data)
+            residual = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T), self.train_data)
             regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ + 1/self.ro * self.localLamda) ** 2
-            self.loss = torch.norm(regularization, p="fro") ** 2
+            self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
             #print("self.loss", self.loss.data)
-            self.lossADMM = 1/self.train_samples * self.loss + regularization
-            #print("self.lossADMM", self.lossADMM)
+            self.lossADMM = self.loss + regularization
+            print("self.loss", self.loss)
             temp = self.localPCA.data.clone()
             # slove local problem locally
             if self.localPCA.grad is not None:
                 self.localPCA.grad.data.zero_()
 
             self.lossADMM.backward(retain_graph=True)
-            localGrad = self.localPCA.grad.data.clone()# grad[0]
+            #localGrad = self.localPCA.grad.data.clone()# grad[0]
             # update local pca
-            temp  = temp - self.learning_rate * localGrad
+            temp  = temp - self.learning_rate * self.localPCA.grad
             self.localPCA = temp.data.clone()
         return 1

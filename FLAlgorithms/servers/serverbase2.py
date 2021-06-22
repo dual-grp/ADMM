@@ -27,7 +27,7 @@ class Server2:
             user.set_commonPCA(self.commonPCAz)
     
     def add_pca(self, user, ratio):
-        self.commonPCAz += user.localPCA + 1/user.ro * user.localLamda
+        self.commonPCAz += ratio*(user.localPCA + 1/user.ro * user.localLamda)
 
     def aggregate_pca(self):
         assert (self.users is not None and len(self.users) > 0)
@@ -35,6 +35,7 @@ class Server2:
         #if(self.num_users = self.to)
         for user in self.selected_users:
             total_train += user.train_samples
+        self.commonPCAz = torch.zeros(self.commonPCAz.shape)
         for user in self.selected_users:
             self.add_pca(user, user.train_samples / total_train)
     
