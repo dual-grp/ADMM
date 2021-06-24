@@ -10,7 +10,7 @@ class UserADMM2():
         self.localPCA   = copy.deepcopy(commonPCA) # local U
         self.localZ     = copy.deepcopy(commonPCA)
         self.localY     = copy.deepcopy(commonPCA)
-        self.localT     = copy.deepcopy(commonPCA)
+        self.localT     = torch.matmul(self.localPCA.T, self.localPCA)
         self.ro = ro
         self.device = device
         self.id = id
@@ -28,12 +28,9 @@ class UserADMM2():
         self.localZ = commonPCA.data.clone()
         self.localY = self.localY + self.ro * (self.localPCA - self.localZ)
         # update local T
-        #hU = torch.norm(torch.max(0,torch.eye(self.localPCA.shape[1])- torch.matmul(self.localPCA.T, self.localPCA)))
-        self.localPCA.requires_grad_(True)
-        if self.localPCA.grad is not None:
-            self.localPCA.grad.data.zero_()
-        self.hMax().backward(retain_graph=True)
-        self.localT = self.localT + self.ro * self.localPCA.grad
+        temp = torch.matmul(self.localPCA.T, self.localPCA) - torch.eye(self.localPCA.shape[1])
+        hU = torch.max(torch.zeros(temp.shape),temp)**2
+        self.localT = self.localT + self.ro * hU
 
     def train_error_and_loss(self):
         residual = torch.matmul((torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)), self.train_data)
@@ -41,20 +38,23 @@ class UserADMM2():
         return loss_train , self.train_samples
 
     def hMax(self):
-        torch.max(0,torch.eye(self.localPCA.shape[1])- torch.matmul(self.localPCA.T, self.localPCA))
-        #return torch.max(0,torch.eye(U[1])- torch.matmul(U.T, U))
+        temp = torch.matmul(self.localPCA.T, self.localPCA) - torch.eye(self.localPCA.shape[1])
+        return torch.max(torch.zeros(temp.shape),temp)#torch.max(0,torch.eye(U[1])- torch.matmul(U.T, U))
 
     def train(self, epochs):
         print("Client--------------",self.id)
         for i in range(self.local_epochs):
             self.localPCA.requires_grad_(True)
             residual = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T), self.train_data)
-            regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ)** 2 + 0.5 * self.ro * torch.norm(self.hMax()) ** 2
-            frobenius_inner = torch.inner(self.localY, self.localPCA - self.localZ) + torch.inner(self.localT, self.hMax())
+            temp = torch.matmul(self.localPCA.T, self.localPCA) - torch.eye(self.localPCA.shape[1])
+            hU = torch.max(torch.zeros(temp.shape),temp)**2
+            regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ)** 2 + 0.5 * self.ro * torch.norm(hU) ** 2
+            frobenius_inner = torch.sum(torch.inner(self.localY, self.localPCA - self.localZ)) + torch.sum(torch.inner(self.localT, hU))
             self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
             #print("self.loss", self.loss.data)
             self.lossADMM = self.loss + frobenius_inner + regularization
             print("self.loss", self.loss)
+            print("self.lossADMM", self.lossADMM)
             temp = self.localPCA.data.clone()
             # slove local problem locally
             if self.localPCA.grad is not None:

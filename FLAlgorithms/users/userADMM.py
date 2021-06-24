@@ -10,7 +10,7 @@ class UserADMM():
         self.localPCA = copy.deepcopy(commonPCA)
         self.ro = ro
         self.localZ = copy.deepcopy(commonPCA)
-        self.localLamda = copy.deepcopy(commonPCA)
+        self.localY = copy.deepcopy(commonPCA)
         self.device = device
         self.id = id
         self.train_samples = len(train_data)
@@ -24,7 +24,7 @@ class UserADMM():
 
     def set_commonPCA(self, commonPCA):
         self.localZ = commonPCA.data.clone()
-        self.localLamda = self.localLamda + self.ro * (self.localPCA - self.localZ)
+        self.localY = self.localY + self.ro * (self.localPCA - self.localZ)
 
     def train_error_and_loss(self):
         residual = torch.matmul((torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)), self.train_data)
@@ -36,11 +36,12 @@ class UserADMM():
         for i in range(self.local_epochs):
             self.localPCA.requires_grad_(True)
             residual = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T), self.train_data)
-            regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ + 1/self.ro * self.localLamda) ** 2
+            regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ + 1/self.ro * self.localY) ** 2
             self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
             #print("self.loss", self.loss.data)
             self.lossADMM = self.loss + regularization
             print("self.loss", self.loss)
+            print("self.lossADMM", self.lossADMM)
             temp = self.localPCA.data.clone()
             # slove local problem locally
             if self.localPCA.grad is not None:

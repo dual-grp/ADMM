@@ -27,7 +27,8 @@ class ADMM(Server2):
                 self.commonPCAz = V
                 check = torch.matmul(V.T,V)
 
-            user = UserADMM(device, id, train, test, self.commonPCAz, learning_rate, ro, local_epochs, dim)
+            #user = UserADMM(device, id, train, test, self.commonPCAz, learning_rate, ro, local_epochs, dim)
+            user = UserADMM2(device, id, train, test, self.commonPCAz, learning_rate, ro, local_epochs, dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples
             
@@ -48,7 +49,7 @@ class ADMM(Server2):
             self.selected_users = self.select_users(glob_iter,self.num_users)
             
             #NOTE: this is required for the ``fork`` method to work
-            for user in self.selected_users:
+            for user in self.users[0:3]:
                 user.train(self.local_epochs)
 
             self.aggregate_pca()
