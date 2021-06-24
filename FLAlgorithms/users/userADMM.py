@@ -28,7 +28,7 @@ class UserADMM():
 
     def train_error_and_loss(self):
         residual = torch.matmul((torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)), self.train_data)
-        loss_train = torch.norm(residual, p="fro") ** 2
+        loss_train = torch.norm(residual, p="fro") ** 2 / self.train_samples
         return loss_train , self.train_samples
 
     def train(self, epochs):

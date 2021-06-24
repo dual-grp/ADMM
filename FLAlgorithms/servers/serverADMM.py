@@ -2,6 +2,7 @@ import torch
 import os
 
 from FLAlgorithms.users.userADMM import UserADMM
+from FLAlgorithms.users.userADMM2 import UserADMM2
 from FLAlgorithms.servers.serverbase2 import Server2
 from utils.model_utils import read_data, read_user_data
 import numpy as np

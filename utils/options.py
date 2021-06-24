@@ -15,7 +15,7 @@ def args_parser():
     parser.add_argument("--ro", type=float, default=0.01, help="Regularization term")
     parser.add_argument("--num_global_iters", type=int, default=200)
     parser.add_argument("--local_epochs", type=int, default = 20)
-    parser.add_argument("--dim", type=int, default = 2)
+    parser.add_argument("--dim", type=int, default = 4)
     parser.add_argument("--optimizer", type=str, default="SGD")
     parser.add_argument("--algorithm", type=str, default="ADMM",choices=["ADMM"]) 
     parser.add_argument("--subusers", type = float, default = 1, help="Number of Users per round")

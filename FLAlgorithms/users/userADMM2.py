@@ -34,7 +34,7 @@ class UserADMM2():
 
     def train_error_and_loss(self):
         residual = torch.matmul((torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)), self.train_data)
-        loss_train = torch.norm(residual, p="fro") ** 2
+        loss_train = torch.norm(residual, p="fro") ** 2 / self.train_samples
         return loss_train , self.train_samples
 
     def hMax(self):
@@ -52,9 +52,9 @@ class UserADMM2():
             frobenius_inner = torch.sum(torch.inner(self.localY, self.localPCA - self.localZ)) + torch.sum(torch.inner(self.localT, hU))
             self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
             #print("self.loss", self.loss.data)
-            self.lossADMM = self.loss + frobenius_inner + regularization
-            print("self.loss", self.loss)
-            print("self.lossADMM", self.lossADMM)
+            self.lossADMM = self.loss + 1/self.train_samples * (frobenius_inner + regularization)
+            #print("self.loss", self.loss)
+            #print("self.lossADMM", self.lossADMM)
             temp = self.localPCA.data.clone()
             # slove local problem locally
             if self.localPCA.grad is not None:

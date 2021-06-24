@@ -23,11 +23,12 @@ class Server2:
 
     def send_pca(self):
         assert (self.users is not None and len(self.users) > 0)
+        print("check Z", torch.matmul(self.commonPCAz.T,self.commonPCAz))
         for user in self.users:
             user.set_commonPCA(self.commonPCAz)
     
     def add_pca(self, user, ratio):
-        self.commonPCAz += ratio*(user.localPCA + 1/user.ro * user.localLamda)
+        self.commonPCAz += ratio*(user.localPCA + 1/user.ro * user.localY)
 
     def aggregate_pca(self):
         assert (self.users is not None and len(self.users) > 0)
@@ -58,15 +59,12 @@ class Server2:
             losses.append(cl*1.0)
         
         ids = [c.id for c in self.users]
-        #groups = [c.group for c in self.clients]
 
         return ids, num_samples, losses
 
     def evaluate(self):
         stats_train = self.train_error_and_loss()
-        train_loss = np.dot(stats_train[2], stats_train[1])*1.0/np.sum(stats_train[1])
-        #train_loss = sum([x * y for (x, y) in zip(stats_train[1], stats_train[3])]).item() / np.sum(stats_train[1])
-        #train_loss = np.mean(list(stats_train[3]))
+        train_loss = sum(stats_train[2])/len(self.users)
         self.rs_train_loss.append(train_loss)
         if(self.experiment):
             self.experiment.log_metric("train_loss",train_loss)
