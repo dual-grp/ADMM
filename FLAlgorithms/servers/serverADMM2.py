@@ -1,14 +1,14 @@
 import torch
 import os
 
-from FLAlgorithms.users.userADMM import UserADMM
-from FLAlgorithms.servers.serverbase import Server
+from FLAlgorithms.users.userADMM2 import UserADMM2
+from FLAlgorithms.servers.serverbase2 import Server2
 from utils.model_utils import read_data, read_user_data
 import numpy as np
 
-# Algorithm 2 (Distributed PCA using ADMM and Grassmann manifold)
+# Algorithm 1
 
-class ADMM(Server):
+class ADMM2(Server2):
     def __init__(self, experiment, device, dataset, learning_rate, ro, num_glob_iters, local_epochs, num_users, dim, time):
         super().__init__(device, dataset, learning_rate, ro, num_glob_iters, local_epochs, num_users, dim, time)
 
@@ -27,7 +27,7 @@ class ADMM(Server):
                 self.commonPCAz = V
                 check = torch.matmul(V.T,V)
 
-            user = UserADMM(device, id, train, test, self.commonPCAz, learning_rate, ro, local_epochs, dim)
+            user = UserADMM2(device, id, train, test, self.commonPCAz, learning_rate, ro, local_epochs, dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples
             

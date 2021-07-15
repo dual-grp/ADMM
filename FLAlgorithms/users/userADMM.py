@@ -36,20 +36,27 @@ class UserADMM():
         for i in range(self.local_epochs):
             self.localPCA.requires_grad_(True)
             residual = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T), self.train_data)
+            #print(residual.shape)
             regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ + 1/self.ro * self.localY) ** 2
+            #print(regularization)
+            # get Euclidean gradient
             self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
-            #print("self.loss", self.loss.data)
+            
             self.lossADMM = self.loss + regularization
-            print("self.loss", self.loss)
-            print("self.lossADMM", self.lossADMM)
+            #print("self.loss", self.loss)
+            #print("self.lossADMM", self.lossADMM)
+            self.lossADMM.backward(retain_graph=True)
+
+            # project Euclidean gradient Fxi on the tangent space
+            projected_grad = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T),self.localPCA.grad)
+            
+            # mapping tangent matrix back to the manifold
             temp = self.localPCA.data.clone()
-            # slove local problem locally
+
             if self.localPCA.grad is not None:
                 self.localPCA.grad.data.zero_()
 
-            self.lossADMM.backward(retain_graph=True)
-            #localGrad = self.localPCA.grad.data.clone()# grad[0]
-            # update local pca
-            temp  = temp - self.learning_rate * self.localPCA.grad
-            self.localPCA = temp.data.clone()
+            temp  = temp + self.learning_rate * projected_grad
+            q, r = torch.linalg.qr(temp)
+            self.localPCA = q.data.clone()
         return 1

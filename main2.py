@@ -7,7 +7,7 @@ import argparse
 import importlib
 import random
 import os
-from FLAlgorithms.servers.serverADMM import ADMM
+from FLAlgorithms.servers.serverADMM2 import ADMM2
 from utils.model_utils import read_data
 from FLAlgorithms.trainmodel.models import *
 from utils.plot_utils import *
@@ -25,7 +25,7 @@ def main(experiment, dataset, algorithm, batch_size, learning_rate, ro, num_glob
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
     data = read_data(dataset) , dataset
 
-    server = ADMM(experiment, device, data, learning_rate, ro, num_glob_iters, local_epochs, numusers, dim, times)
+    server = ADMM2(experiment, device, data, learning_rate, ro, num_glob_iters, local_epochs, numusers, dim, times)
     server.train()
 
 if __name__ == "__main__":

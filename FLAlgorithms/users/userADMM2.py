@@ -56,7 +56,7 @@ class UserADMM2():
             #print("self.loss", self.loss)
             #print("self.lossADMM", self.lossADMM)
             temp = self.localPCA.data.clone()
-            # slove local problem locally
+            # solve local problem locally
             if self.localPCA.grad is not None:
                 self.localPCA.grad.data.zero_()
 
