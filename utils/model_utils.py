@@ -267,6 +267,7 @@ def read_data(dataset):
     train_data = {}
     test_data = {}
 
+    train_data_dir = "data/train"
     train_files = os.listdir(train_data_dir)
     train_files = [f for f in train_files if f.endswith('.json')]
     for f in train_files:
@@ -278,6 +279,7 @@ def read_data(dataset):
             groups.extend(cdata['hierarchies'])
         train_data.update(cdata['user_data'])
 
+    test_data_dir = "data/test"
     test_files = os.listdir(test_data_dir)
     test_files = [f for f in test_files if f.endswith('.json')]
     for f in test_files:

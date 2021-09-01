@@ -43,6 +43,8 @@ class Server2:
     def select_users(self, round, fac_users):
         if(fac_users == 1):
             print("All users are selected")
+            # for user in self.users:
+            #     print("user_id", user.id)
             return self.users
         num_users = int(fac_users * len(self.users))
         num_users = min(num_users, len(self.users))

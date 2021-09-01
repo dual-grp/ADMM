@@ -43,7 +43,7 @@ class Server:
             test = test[int(0.6*len(test)):]
         return train, test
 
-    def get_partion(self, total_users):
+    def  get_partion(self, total_users):
         if(self.sub_data):
             if(self.sub_data == 1):
                 partion = int(0.9 * total_users)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from comet_ml import Experiment
+#from comet_ml import Experiment
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ torch.manual_seed(0)
 from utils.options import args_parser
 
 # import comet_ml at the top of your file
-
+#                                                                                                                           
 # Create an experiment with your api key:
 def main(experiment, dataset, algorithm, batch_size, learning_rate, ro, num_glob_iters,
          local_epochs, numusers,dim, times, gpu):

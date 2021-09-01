@@ -44,25 +44,47 @@ class UserADMM2():
     def train(self, epochs):
         print("Client--------------",self.id)
         for i in range(self.local_epochs):
+            # self.localPCA.requires_grad_(True)
+            # residual = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T), self.train_data)
+            # temp = torch.matmul(self.localPCA.T, self.localPCA) - torch.eye(self.localPCA.shape[1])
+            # hU = torch.max(torch.zeros(temp.shape),temp)**2
+            # regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ)** 2 + 0.5 * self.ro * torch.norm(hU) ** 2
+            # frobenius_inner = torch.sum(torch.inner(self.localY, self.localPCA - self.localZ)) + torch.sum(torch.inner(self.localT, hU))
+            # self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
+            # #print("self.loss", self.loss.data)
+            # self.lossADMM = self.loss + 1/self.train_samples * (frobenius_inner + regularization)
+            # #print("self.loss", self.loss)
+            # #print("self.lossADMM", self.lossADMM)
+            # temp = self.localPCA.data.clone()
+            # # slove local problem locally
+            # if self.localPCA.grad is not None:
+            #     self.localPCA.grad.data.zero_()
+
+            # self.lossADMM.backward(retain_graph=True)
+            # #localGrad = self.localPCA.grad.data.clone()# grad[0]
+            # # update local pca
+            # temp  = temp - self.learning_rate * self.localPCA.grad
+            # self.localPCA = temp.data.clone()
+            
+            # print("Grassmann Manifold from Tung Anh")
             self.localPCA.requires_grad_(True)
             residual = torch.matmul(torch.eye(self.localPCA.shape[0])- torch.matmul(self.localPCA, self.localPCA.T), self.train_data)
-            temp = torch.matmul(self.localPCA.T, self.localPCA) - torch.eye(self.localPCA.shape[1])
-            hU = torch.max(torch.zeros(temp.shape),temp)**2
-            regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ)** 2 + 0.5 * self.ro * torch.norm(hU) ** 2
-            frobenius_inner = torch.sum(torch.inner(self.localY, self.localPCA - self.localZ)) + torch.sum(torch.inner(self.localT, hU))
-            self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2 
-            #print("self.loss", self.loss.data)
+            frobenius_inner = torch.sum(torch.inner(self.localY, self.localPCA - self.localZ))
+            regularization = 0.5 * self.ro * torch.norm(self.localPCA - self.localZ)** 2
+            self.loss = 1/self.train_samples * torch.norm(residual, p="fro") ** 2
             self.lossADMM = self.loss + 1/self.train_samples * (frobenius_inner + regularization)
-            #print("self.loss", self.loss)
-            #print("self.lossADMM", self.lossADMM)
             temp = self.localPCA.data.clone()
             # slove local problem locally
             if self.localPCA.grad is not None:
                 self.localPCA.grad.data.zero_()
 
             self.lossADMM.backward(retain_graph=True)
-            #localGrad = self.localPCA.grad.data.clone()# grad[0]
-            # update local pca
-            temp  = temp - self.learning_rate * self.localPCA.grad
-            self.localPCA = temp.data.clone()
-        return 1
+            # projection step
+            projection_matrix = torch.eye(self.localPCA.shape[0]) - torch.matmul(self.localPCA, self.localPCA.T)
+            projection_gradient = torch.matmul(projection_matrix, self.localPCA.grad)
+
+            temp = temp - self.learning_rate * projection_gradient
+            # self.localPCA = temp.data.clone()
+            q, r = torch.linalg.qr(temp)
+            self.localPCA = q.data.clone()
+        return  
