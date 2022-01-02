@@ -66,7 +66,7 @@ Author: Huilan Zhu under the supervision of Dr. Nguyen Tran
 
 
 # Executing FAPL or FGPL with customised parameters
-  - The main file "main.py" which allows running a single algorithm on a dataset with specific hyperparameters defined in file "utils/options.py". To run a single algorithm on a specified dataset: 
+  - The main file "main.py" which allows running a single algorithm on a dataset with specific hyperparameters defined in file "utils/options.py". To run a single algorithm on a specified dataset, one example is shown as follow: 
     <pre><code>
     python3 main.py --dataset Mnist --batch_size 2 --learning_rate 0.00000002 --ro 1 --num_global_iters 20 --local_epochs 4 --dim 30 --optimizer SGD --algorithm FGPL --subusers 20 --times 1
     </code></pre>
