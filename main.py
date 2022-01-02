@@ -8,6 +8,8 @@ import importlib
 import random
 import os
 from FLAlgorithms.servers.serverADMM import ADMM
+from FLAlgorithms.servers.serverGrassmann import Grassmann
+from FLAlgorithms.servers.centralisedPCA import Centralised
 from utils.model_utils import read_data
 from FLAlgorithms.trainmodel.models import *
 from utils.plot_utils import *
@@ -16,17 +18,28 @@ torch.manual_seed(0)
 from utils.options import args_parser
 
 # import comet_ml at the top of your file
-
+#                                                                                                                           
 # Create an experiment with your api key:
 def main(experiment, dataset, algorithm, batch_size, learning_rate, ro, num_glob_iters,
          local_epochs, numusers,dim, times, gpu):
-    
     # Get device status: Check GPU or CPU
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
     data = read_data(dataset) , dataset
-
-    server = ADMM(experiment, device, data, learning_rate, ro, num_glob_iters, local_epochs, numusers, dim, times)
+    if(algorithm == "FAPL"):
+        server = ADMM(experiment, device, data, learning_rate, ro, num_glob_iters, local_epochs, numusers, dim, times)
+    if(algorithm =="FGPL"):
+        server = Grassmann(experiment, device, data, learning_rate, ro, num_glob_iters, local_epochs, numusers, dim, times)
+    if(algorithm == "Centralised"):
+        learning_rate = 0
+        ro = 0
+        num_glob_iters = 0
+        local_epochs = 0
+        server = Centralised(experiment, device, data, learning_rate, ro, num_glob_iters, local_epochs, numusers, dim, times)
     server.train()
+
+    # test performance of concensus principle subspace
+    global_epoch = 50
+    server.test("dnn", dataset, global_epoch)
 
 if __name__ == "__main__":
     args = args_parser()

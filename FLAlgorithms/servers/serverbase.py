@@ -2,8 +2,6 @@ import torch
 import os
 import numpy as np
 import h5py
-from utils.model_utils import Metrics
-import copy
 
 class Server:
     def __init__(self, device, dataset, learning_rate, ro, num_glob_iters, local_epochs, num_users, dim, times):
@@ -24,11 +22,17 @@ class Server:
     def send_pca(self):
         assert (self.users is not None and len(self.users) > 0)
         print("check Z", torch.matmul(self.commonPCAz.T,self.commonPCAz))
-        for user in self.users:
+        # for user in self.users:
+        for user in self.selected_users:
+            # print("user_id", user.id)
             user.set_commonPCA(self.commonPCAz)
     
     def add_pca(self, user, ratio):
+        # ADMM update
         self.commonPCAz += ratio*(user.localPCA + 1/user.ro * user.localY)
+        # simplified ADMM update
+        #print("simplified ADMM update")
+        #self.commonPCAz += ratio*(user.localPCA)
 
     def aggregate_pca(self):
         assert (self.users is not None and len(self.users) > 0)
@@ -36,6 +40,7 @@ class Server:
         #if(self.num_users = self.to)
         for user in self.selected_users:
             total_train += user.train_samples
+            # print("user_id", user.id)
         self.commonPCAz = torch.zeros(self.commonPCAz.shape)
         for user in self.selected_users:
             self.add_pca(user, user.train_samples / total_train)
@@ -43,6 +48,8 @@ class Server:
     def select_users(self, round, fac_users):
         if(fac_users == 1):
             print("All users are selected")
+            # for user in self.users:
+            #     print("user_id", user.id)
             return self.users
         num_users = int(fac_users * len(self.users))
         num_users = min(num_users, len(self.users))
@@ -70,6 +77,7 @@ class Server:
             self.experiment.log_metric("train_loss",train_loss)
         #print("stats_train[1]",stats_train[3][0])
         print("Average Global Trainning Loss: ",train_loss)
+        return train_loss
     
     def save_results(self):
         dir_path = "./results"

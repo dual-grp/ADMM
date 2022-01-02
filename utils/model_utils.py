@@ -16,72 +16,16 @@ NUM_CHANNELS = 1
 
 IMAGE_SIZE_CIFAR = 32
 NUM_CHANNELS_CIFAR = 3
-
-def suffer_data(data):
-    data_x = data['x']
-    data_y = data['y']
-        # randomly shuffle data
-    np.random.seed(100)
-    rng_state = np.random.get_state()
-    np.random.shuffle(data_x)
-    np.random.set_state(rng_state)
-    np.random.shuffle(data_y)
-    return (data_x, data_y)
     
-def batch_data(data, batch_size):
-    '''
-    data is a dict := {'x': [numpy array], 'y': [numpy array]} (on one client)
-    returns x, y, which are both numpy array of length: batch_size
-    '''
-    data_x = data['x']
-    data_y = data['y']
-
-    # randomly shuffle data
-    np.random.seed(100)
-    rng_state = np.random.get_state()
-    np.random.shuffle(data_x)
-    np.random.set_state(rng_state)
-    np.random.shuffle(data_y)
-
-    # loop through mini-batches
-    for i in range(0, len(data_x), batch_size):
-        batched_x = data_x[i:i+batch_size]
-        batched_y = data_y[i:i+batch_size]
-        yield (batched_x, batched_y)
-
-
-def get_random_batch_sample(data_x, data_y, batch_size):
-    num_parts = len(data_x)//batch_size + 1
-    if(len(data_x) > batch_size):
-        batch_idx = np.random.choice(list(range(num_parts +1)))
-        sample_index = batch_idx*batch_size
-        if(sample_index + batch_size > len(data_x)):
-            return (data_x[sample_index:], data_y[sample_index:])
-        else:
-            return (data_x[sample_index: sample_index+batch_size], data_y[sample_index: sample_index+batch_size])
-    else:
-        return (data_x,data_y)
-
-
-def get_batch_sample(data, batch_size):
-    data_x = data['x']
-    data_y = data['y']
-
-    np.random.seed(100)
-    rng_state = np.random.get_state()
-    np.random.shuffle(data_x)
-    np.random.set_state(rng_state)
-    np.random.shuffle(data_y)
-
-    batched_x = data_x[0:batch_size]
-    batched_y = data_y[0:batch_size]
-    return (batched_x, batched_y)
 
 def read_cifa_data():
-    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        transforms.Lambda(lambda x: torch.flatten(x))])
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,download=True, transform=transform)
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,download=True, transform=transform)
+    trainset = torchvision.datasets.CIFAR10(root='./data/Cifar10/data', train=True,download=True, transform=transform)
+    testset = torchvision.datasets.CIFAR10(root='./data/Cifar10/data', train=False,download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
     testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
 
@@ -145,10 +89,7 @@ def read_cifa_data():
         0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
     props = np.array([[[len(v)-NUM_USERS]] for v in cifa_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
-    # print("here:",props/np.sum(props,(1,2), keepdims=True))
-    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
-    #    props/np.sum(props, (1, 2), keepdims=True)
-    #idx = 1000*np.ones(10, dtype=np.int64)
+    
     # print("here2:",props)
     for user in trange(NUM_USERS):
         for j in range(NUM_LABELS):  # 4 labels for each users
@@ -173,7 +114,6 @@ def read_cifa_data():
     test_data = {'users': [], 'user_data':{}, 'num_samples':[]}
 
     # Setup 5 users
-    # for i in trange(5, ncols=120):
     for i in range(NUM_USERS):
         uname = i
         combined = list(zip(X[i], y[i]))
@@ -194,51 +134,6 @@ def read_cifa_data():
         train_data['users'].append(uname)
         train_data['num_samples'].append(train_len)
         
-        
-    # random.seed(1)
-    # np.random.seed(1)
-    # NUM_USERS = 1 # should be muitiple of 10
-    # NUM_LABELS = 10
-    # # Setup directory for train/test data
-    # cifa_data_image = []
-    # cifa_data_label = []
-
-    # cifa_data_image.extend(trainset.data.cpu().detach().numpy())
-    # cifa_data_label.extend(trainset.targets.cpu().detach().numpy())
-
-    # cifa_data_image = np.array(cifa_data_image)
-    # cifa_data_label = np.array(cifa_data_label)
-
-    # # Create data structure
-    # train_data = {'users': [], 'user_data':{}, 'num_samples':[]}
-
-    # # Setup 5 users
-    # # for i in trange(5, ncols=120):
-    # for i in range(NUM_USERS):
-    #     uname = 'f_{0:05d}'.format(i)
-    #     train_data['users'].append(uname) 
-    #     train_data['user_data'][uname] = {'x': cifa_data_image.tolist(), 'y': cifa_data_label.tolist()}
-    #     train_data['num_samples'].append(len(cifa_data_image))
-
-    # #-----------------------------------TEst -------------------------------------#
-    # cifa_data_image_test = []
-    # cifa_data_label_test = []
-    # cifa_data_image_test.extend(testset.data.cpu().detach().numpy())
-    # cifa_data_label_test.extend(testset.targets.cpu().detach().numpy())
-    # cifa_data_image_test = np.array(cifa_data_image_test)
-    # cifa_data_label_test = np.array(cifa_data_label_test)
-
-    # cifa_data = []
-
-    # # Create data structure
-    # test_data = {'users': [], 'user_data':{}, 'num_samples':[]}
-    
-    # for i in range(NUM_USERS):
-    #     num_samples = len(cifa_data_image_test)
-    #     test_data['users'].append(uname) 
-    #     test_data['user_data'][uname] = {'x': cifa_data_image_test.tolist(), 'y': cifa_data_label_test.tolist()}
-    #     test_data['num_samples'].append(num_samples)
-
     return train_data['users'], _ , train_data['user_data'], test_data['user_data']
 
 def read_data(dataset):
@@ -295,47 +190,6 @@ def read_user_data(index,data,dataset):
     train_data = data[2][id]
     test_data = data[3][id]
     X_train, y_train, X_test, y_test = torch.Tensor(train_data['x']), torch.Tensor(train_data['y']), torch.Tensor(test_data['x']), torch.Tensor(test_data['y'])    
-    train_data = [(x, y) for x, y in zip(X_train, X_train)]
-    test_data = [(x, y) for x, y in zip(X_test, y_test)]
-    #return id, train_data, test_data
-    return id, X_train, X_test
+    train_data = [(x, y) for x, y in zip(X_train, y_train)]
+    return id, X_train, X_test,y_train, y_test
 
-class Metrics(object):
-    def __init__(self, clients, params):
-        self.params = params
-        num_rounds = params['num_rounds']
-        self.bytes_written = {c.id: [0] * num_rounds for c in clients}
-        self.client_computations = {c.id: [0] * num_rounds for c in clients}
-        self.bytes_read = {c.id: [0] * num_rounds for c in clients}
-        self.accuracies = []
-        self.train_accuracies = []
-
-    def update(self, rnd, cid, stats):
-        bytes_w, comp, bytes_r = stats
-        self.bytes_written[cid][rnd] += bytes_w
-        self.client_computations[cid][rnd] += comp
-        self.bytes_read[cid][rnd] += bytes_r
-
-    def write(self):
-        metrics = {}
-        metrics['dataset'] = self.params['dataset']
-        metrics['num_rounds'] = self.params['num_rounds']
-        metrics['eval_every'] = self.params['eval_every']
-        metrics['learning_rate'] = self.params['learning_rate']
-        metrics['mu'] = self.params['mu']
-        metrics['num_epochs'] = self.params['num_epochs']
-        metrics['batch_size'] = self.params['batch_size']
-        metrics['accuracies'] = self.accuracies
-        metrics['train_accuracies'] = self.train_accuracies
-        metrics['client_computations'] = self.client_computations
-        metrics['bytes_written'] = self.bytes_written
-        metrics['bytes_read'] = self.bytes_read
-        metrics_dir = os.path.join('out', self.params['dataset'], 'metrics_{}_{}_{}_{}_{}.json'.format(
-            self.params['seed'], self.params['optimizer'], self.params['learning_rate'], self.params['num_epochs'], self.params['mu']))
-        #os.mkdir(os.path.join('out', self.params['dataset']))
-        if not os.path.exists('out'):
-            os.mkdir('out')
-        if not os.path.exists(os.path.join('out', self.params['dataset'])):
-            os.mkdir(os.path.join('out', self.params['dataset']))
-        with open(metrics_dir, 'w') as ouf:
-            json.dump(metrics, ouf)
