@@ -22,7 +22,7 @@ Author: Huilan Zhu under the supervision of Dr. Nguyen Tran
 
 # Produce experiments and figures
 
-- There is a file "plot.py" which allows running all experiments and generate figures. The experimental results are stored are already stored as pickle files in the folder "results". Running commands in the following sections will render figures according to pickle files. Alternatively, if you would like to rerun all experiments, delete pickle files in the "results" folder and run these commands. 
+- There is a file "plot.py" which allows running all experiments and generate figures. The experimental results are already stored as pickle files in the folder "results". Running commands in the following sections will render figures according to pickle files. Alternatively, if you would like to rerun all experiments, delete pickle files in the "results" folder and run these commands. 
 
 
 ## Effects of hyperparameters
