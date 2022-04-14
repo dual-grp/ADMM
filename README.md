@@ -2,7 +2,7 @@
 
 This repository implements all experiments in the thesis **Federated Principle Componenet Analysis (PCA) Learning**.
   
-Author: Huilan Zhu under the supervision of Dr. Nguyen Tran
+Author: Tung-Anh Nguyen, Huilan Zhu under the supervision of Dr. Nguyen Tran
 
 # Software requirements:
 - torch, torchvision, sklearn, pandas, matplotlib, numpy, scipy, tqdm, pillow, H5py.
